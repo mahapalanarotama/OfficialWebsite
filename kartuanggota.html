@@ -121,7 +121,7 @@
           </tr>
         </thead>
         <tbody id="anggotaTableBody">
-          <!-- Data akan dimuat dari Firestore -->
+          <!-- Data akan dimuat dari Firestore, namun default disembunyikan -->
         </tbody>
       </table>
 
@@ -151,12 +151,12 @@
     import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-analytics.js";
     import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
 
-    // Firebase configuration
+    // Firebase configuration (pastikan konfigurasi sesuai project kamu)
     const firebaseConfig = {
       apiKey: "AIzaSyBe-XLmVRiMs844VxR1_awMzGEGARb6Xmk",
       authDomain: "website-mpn-65e8d.firebaseapp.com",
       projectId: "website-mpn-65e8d",
-      storageBucket: "website-mpn-65e8d.firebasestorage.app",
+      storageBucket: "website-mpn-65e8d.appspot.com",
       messagingSenderId: "798271486726",
       appId: "1:798271486726:web:0d0e0178a963804f627c87",
       measurementId: "G-KSVPVC1Z9D"
@@ -172,35 +172,44 @@
       const anggotaTableBody = document.getElementById("anggotaTableBody");
       anggotaTableBody.innerHTML = ""; // Bersihkan tabel
 
-      const querySnapshot = await getDocs(collection(db, "anggota"));
-      querySnapshot.forEach(doc => {
-        const data = doc.data();
-        const row = document.createElement("tr");
-        row.setAttribute("data-namalengkap", data.namalengkap.toLowerCase());
-        row.setAttribute("data-namalapangan", data.namalapangan.toLowerCase());
-        row.setAttribute("data-namaangkatan", data.namaangkatan.toLowerCase());
-        row.setAttribute("data-tahun", data.tahun.toString().toLowerCase());
-        row.setAttribute("data-nomorregistrasi", data.nomorregistrasi.toLowerCase());
-        row.setAttribute("data-keanggotaan", data.keanggotaan.toLowerCase());
-        row.setAttribute("data-foto", data.foto); // URL foto
-        row.innerHTML = `
-          <td>${data.namalengkap}</td>
-          <td>${data.namalapangan}</td>
-          <td>${data.namaangkatan}</td>
-          <td>${data.tahun}</td>
-          <td>${data.nomorregistrasi}</td>
-          <td>${data.keanggotaan}</td>
-          <td>
-            <a href="${data.link}" target="_blank">
-              <canvas id="qr-${data.nomorregistrasi}" class="qrcode"></canvas>
-            </a>
-          </td>
-        `;
-        // Sembunyikan baris secara default
-        row.style.display = "none";
-        anggotaTableBody.appendChild(row);
-      });
-      generateQRCodes();
+      try {
+        const querySnapshot = await getDocs(collection(db, "anggota"));
+        console.log("Jumlah dokumen: ", querySnapshot.size);
+        querySnapshot.forEach(doc => {
+          const data = doc.data();
+          console.log("Data anggota:", data);
+          const row = document.createElement("tr");
+          // Simpan nilai asli untuk pencarian
+          row.setAttribute("data-namalengkap", data.namalengkap.toString());
+          row.setAttribute("data-namalapangan", data.namalapangan.toString());
+          row.setAttribute("data-namaangkatan", data.namaangkatan.toString());
+          row.setAttribute("data-tahun", data.tahun.toString());
+          row.setAttribute("data-nomorregistrasi", data.nomorregistrasi.toString());
+          row.setAttribute("data-keanggotaan", data.keanggotaan.toString());
+          row.setAttribute("data-foto", data.foto); // URL foto
+          row.innerHTML = `
+            <td>${data.namalengkap}</td>
+            <td>${data.namalapangan}</td>
+            <td>${data.namaangkatan}</td>
+            <td>${data.tahun}</td>
+            <td>${data.nomorregistrasi}</td>
+            <td>${data.keanggotaan}</td>
+            <td>
+              <a href="${data.link}" target="_blank">
+                <canvas id="qr-${data.nomorregistrasi}" class="qrcode"></canvas>
+              </a>
+            </td>
+          `;
+          // Sembunyikan baris secara default
+          row.style.display = "none";
+          anggotaTableBody.appendChild(row);
+        });
+        generateQRCodes();
+        updateMemberPhotos();
+        updateAnggotaCards();
+      } catch (error) {
+        console.error("Error mengambil data:", error);
+      }
     }
 
     // Fungsi untuk menghasilkan QR Code untuk setiap baris (desktop)
@@ -301,63 +310,46 @@
       });
     }
 
-    // Fungsi pencarian yang menyaring data dan memperbarui tampilan (desktop & mobile)
+    // Fungsi pencarian: tampilkan data hanya ketika ada input pencarian
     function filterTable() {
       const searchType = document.getElementById("searchType").value;
       const query = document.getElementById("searchInput").value.toLowerCase().trim();
       const rows = document.querySelectorAll("#anggotaTable tbody tr");
       
-      // Sembunyikan semua baris jika query kosong
+      // Jika query kosong, sembunyikan semua baris
       if (query === "") {
         rows.forEach(row => row.style.display = "none");
-        updateMemberPhotos();
-        updateAnggotaCards();
-        return;
+      } else {
+        rows.forEach(row => {
+          const data = row.getAttribute("data-" + searchType).toLowerCase();
+          row.style.display = data.includes(query) ? "" : "none";
+        });
       }
-      
-      rows.forEach(row => {
-        const data = row.getAttribute("data-" + searchType).toLowerCase();
-        if (data.includes(query)) {
-          row.style.display = "";
-        } else {
-          row.style.display = "none";
-        }
-      });
       updateMemberPhotos();
       updateAnggotaCards();
     }
 
-    // Fungsi untuk menangkap parameter URL
-function getQueryParams() {
-  const params = new URLSearchParams(window.location.search);
-  const type = params.get("type");  // Jenis pencarian
-  const input = params.get("input"); // Nilai yang dicari
-  
-  if (type && input) {
-    // Set nilai searchType dan searchInput sesuai parameter
-    document.getElementById("searchType").value = type;
-    document.getElementById("searchInput").value = input;
+    // Fungsi untuk menangkap parameter URL (jika ingin mengisi pencarian otomatis)
+    function getQueryParams() {
+      const params = new URLSearchParams(window.location.search);
+      const type = params.get("type");  // Jenis pencarian
+      const input = params.get("input"); // Nilai yang dicari
+      
+      if (type && input) {
+        document.getElementById("searchType").value = type;
+        document.getElementById("searchInput").value = input;
+        filterTable();
+      }
+    }
 
-    // Jalankan filter secara otomatis
-    filterTable();
-  }
-}
+    document.addEventListener("DOMContentLoaded", () => {
+      loadAnggotaData().then(() => {
+        getQueryParams(); // Jika ada parameter URL, jalankan pencarian otomatis
+      });
 
-    querySnapshot.forEach(doc => {
-  console.log("Dokumen:", doc.id, doc.data());
-  // Lanjutkan pemrosesan...
-});
-
-
-// Jalankan saat halaman dimuat
-document.addEventListener("DOMContentLoaded", () => {
-  loadAnggotaData().then(() => {
-    getQueryParams(); // Ambil parameter dan jalankan pencarian otomatis
-  });
-
-  document.getElementById("searchBtn").addEventListener("click", filterTable);
-  document.getElementById("searchInput").addEventListener("keyup", filterTable);
-});
+      document.getElementById("searchBtn").addEventListener("click", filterTable);
+      document.getElementById("searchInput").addEventListener("keyup", filterTable);
+    });
     
   </script>
   <!-- Pastikan QRCode.js tersedia (CDN non-modular) -->
