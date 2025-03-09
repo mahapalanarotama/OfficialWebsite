@@ -186,7 +186,7 @@
           row.setAttribute("data-tahun", data.tahun.toString());
           row.setAttribute("data-nomorregistrasi", data.nomorregistrasi.toString());
           row.setAttribute("data-keanggotaan", data.keanggotaan.toString());
-          row.setAttribute("data-foto", data.foto); // URL foto
+          row.setAttribute("data-foto", data.fototoString()); // URL foto
           row.innerHTML = `
             <td>${data.namalengkap}</td>
             <td>${data.namalapangan}</td>
