@@ -180,12 +180,12 @@
           console.log("Data anggota:", data);
           const row = document.createElement("tr");
           // Simpan nilai asli untuk pencarian
-          row.setAttribute("data-namalengkap", data.namalengkap.toString());
-          row.setAttribute("data-namalapangan", data.namalapangan.toString());
-          row.setAttribute("data-namaangkatan", data.namaangkatan.toString());
-          row.setAttribute("data-tahun", data.tahun.toString());
-          row.setAttribute("data-nomorregistrasi", data.nomorregistrasi.toString());
-          row.setAttribute("data-keanggotaan", data.keanggotaan.toString());
+          row.setAttribute("data-namalengkap", data.namalengkap.toString().toLowerCase());
+          row.setAttribute("data-namalapangan", data.namalapangan.toString().toLowerCase());
+          row.setAttribute("data-namaangkatan", data.namaangkatan.toString().toLowerCase());
+          row.setAttribute("data-tahun", data.tahun.toString().toLowerCase());
+          row.setAttribute("data-nomorregistrasi", data.nomorregistrasi.toString().toLowerCase());
+          row.setAttribute("data-keanggotaan", data.keanggotaan.toString().toLowerCase());
           row.setAttribute("data-foto", data.foto); // URL foto
           row.innerHTML = `
             <td>${data.namalengkap}</td>
@@ -236,14 +236,22 @@
       const photoContainer = document.getElementById("memberPhotos");
       photoContainer.innerHTML = "";
       rows.forEach(row => {
+        // Tampilkan foto hanya jika baris tampil (hasil pencarian)
         if (row.style.display !== "none") {
           const foto = row.getAttribute("data-foto");
           const nama = row.getAttribute("data-namalengkap");
-          const img = document.createElement("img");
-          img.src = foto;
-          img.alt = "Kartu Anggota " + nama;
-          img.className = "member-photo";
-          photoContainer.appendChild(img);
+          if(foto && foto.trim() !== ""){
+            const img = document.createElement("img");
+            img.src = foto;
+            img.alt = "Kartu Anggota " + nama;
+            img.className = "member-photo";
+            img.onerror = function() {
+              console.error("Gagal memuat gambar: " + foto);
+            };
+            photoContainer.appendChild(img);
+          } else {
+            console.error("Tidak ada URL gambar untuk: " + nama);
+          }
         }
       });
     }
