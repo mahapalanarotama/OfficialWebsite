@@ -327,12 +327,32 @@
       updateAnggotaCards();
     }
 
-    // Event listeners
-    document.addEventListener("DOMContentLoaded", () => {
-      loadAnggotaData();
-      document.getElementById("searchBtn").addEventListener("click", filterTable);
-      document.getElementById("searchInput").addEventListener("keyup", filterTable);
-    });
+    // Fungsi untuk menangkap parameter URL
+function getQueryParams() {
+  const params = new URLSearchParams(window.location.search);
+  const type = params.get("type");  // Jenis pencarian
+  const input = params.get("input"); // Nilai yang dicari
+  
+  if (type && input) {
+    // Set nilai searchType dan searchInput sesuai parameter
+    document.getElementById("searchType").value = type;
+    document.getElementById("searchInput").value = input;
+
+    // Jalankan filter secara otomatis
+    filterTable();
+  }
+}
+
+// Jalankan saat halaman dimuat
+document.addEventListener("DOMContentLoaded", () => {
+  loadAnggotaData().then(() => {
+    getQueryParams(); // Ambil parameter dan jalankan pencarian otomatis
+  });
+
+  document.getElementById("searchBtn").addEventListener("click", filterTable);
+  document.getElementById("searchInput").addEventListener("keyup", filterTable);
+});
+    
   </script>
   <!-- Pastikan QRCode.js tersedia (CDN non-modular) -->
   <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
