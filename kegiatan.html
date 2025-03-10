@@ -17,6 +17,7 @@
     }
     section {
       margin-top: 80px;
+      padding-bottom: 60px;
     }
     h1, h2, h4 {
       color: #2f4f4f;
@@ -37,6 +38,13 @@
       font-size: 1.5rem;
       margin-right: 15px;
     }
+    /* Tampilan card kegiatan */
+    .card {
+      transition: transform 0.3s;
+    }
+    .card:hover {
+      transform: translateY(-5px);
+    }
   </style>
 </head>
 <body>
@@ -50,18 +58,10 @@
       </button>
       <div class="collapse navbar-collapse" id="navbarContent">
          <ul class="navbar-nav ms-auto">
-            <li class="nav-item">
-              <a class="nav-link" href="index.html">Beranda</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link active" href="kegiatan.html">Kegiatan</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="pembelajaran.html">Pembelajaran</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="kartuanggota.html">Kartu Anggota</a>
-            </li>
+            <li class="nav-item"><a class="nav-link" href="index.html">Beranda</a></li>
+            <li class="nav-item"><a class="nav-link active" href="kegiatan.html">Kegiatan</a></li>
+            <li class="nav-item"><a class="nav-link" href="pembelajaran.html">Pembelajaran</a></li>
+            <li class="nav-item"><a class="nav-link" href="kartuanggota.html">Kartu Anggota</a></li>
          </ul>
       </div>
     </div>
@@ -71,45 +71,13 @@
   <section id="kegiatan" class="py-5 bg-light">
     <div class="container">
       <h2 class="mb-4">Kegiatan</h2>
-      <div class="row">
-        <!-- Card Kegiatan 1 -->
-        <div class="col-md-4">
-          <div class="card mb-4">
-            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRTPRDuY_M8BAtgKVhyYPWNOoIrSFprFVVWuj4Hp2A8k74rtb4N_Cnh1II&s=10" class="card-img-top" alt="Jelajah Gunung">
-            <div class="card-body">
-              <h5 class="card-title">Jelajah Gunung</h5>
-              <p class="card-text">Aktivitas pendakian dan eksplorasi alam terbuka.</p>
-              <a href="#" class="btn btn-success" onclick="alert('Fitur selengkapnya akan segera hadir!'); return false;">Selengkapnya</a>
-            </div>
-          </div>
-        </div>
-        <!-- Card Kegiatan 2 -->
-        <div class="col-md-4">
-          <div class="card mb-4">
-            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQkigW9iARbxQtYbCZ75aMQU89HM7k_pGlFHYglDRxzH17aSShs1iTkmvpw&s=10" class="card-img-top" alt="Camping Malam">
-            <div class="card-body">
-              <h5 class="card-title">Camping Malam</h5>
-              <p class="card-text">Pengalaman camping yang seru di alam terbuka.</p>
-              <a href="#" class="btn btn-success" onclick="alert('Fitur selengkapnya akan segera hadir!'); return false;">Selengkapnya</a>
-            </div>
-          </div>
-        </div>
-        <!-- Card Kegiatan 3 -->
-        <div class="col-md-4">
-          <div class="card mb-4">
-            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS1uxOz7iuUYNj8ZbTPmyd2A4ymVuJg6b8VG6i5NqnJGPcwI7KmFqDTeSud&s=10" class="card-img-top" alt="Workshop Survival">
-            <div class="card-body">
-              <h5 class="card-title">Workshop Survival</h5>
-              <p class="card-text">Pelatihan teknik bertahan hidup di alam.</p>
-              <a href="#" class="btn btn-success" onclick="alert('Fitur selengkapnya akan segera hadir!'); return false;">Selengkapnya</a>
-            </div>
-          </div>
-        </div>
+      <div class="row" id="kegiatanContainer">
+        <!-- Card kegiatan akan diisi secara dinamis dari Firestore -->
       </div>
     </div>
   </section>
 
-  <!-- Footer dengan Alamat, Kontak, dan Sosial Media -->
+  <!-- Footer -->
   <footer class="footer-custom">
     <div class="container">
       <div class="row text-center text-md-start">
@@ -150,12 +118,69 @@
     </div>
   </footer>
 
-  <!-- Bootstrap Bundle JS -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      console.log("Halaman Kegiatan berhasil dimuat!");
+  <!-- Firebase, Firestore Integration, dan Log Proses -->
+  <script type="module">
+    // Import Firebase modules
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-analytics.js";
+    import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
+
+    // Firebase configuration (ganti dengan data proyek Anda)
+    const firebaseConfig = {
+      apiKey: "AIzaSyBe-XLmVRiMs844VxR1_awMzGEGARb6Xmk",
+      authDomain: "website-mpn-65e8d.firebaseapp.com",
+      projectId: "website-mpn-65e8d",
+      storageBucket: "website-mpn-65e8d.appspot.com",
+      messagingSenderId: "798271486726",
+      appId: "1:798271486726:web:0d0e0178a963804f627c87",
+      measurementId: "G-KSVPVC1Z9D"
+    };
+
+    console.log("Inisialisasi Firebase...");
+    const app = initializeApp(firebaseConfig);
+    const analytics = getAnalytics(app);
+    const db = getFirestore(app);
+    console.log("Firebase dan Firestore diinisialisasi.");
+
+    // Fungsi untuk mengambil data kegiatan dari Firestore dan menampilkannya sebagai card
+    async function loadKegiatanData() {
+      console.log("Mengambil data kegiatan dari Firestore...");
+      const container = document.getElementById("kegiatanContainer");
+      container.innerHTML = "";
+      try {
+        const querySnapshot = await getDocs(collection(db, "kegiatan"));
+        console.log("Jumlah kegiatan yang diambil:", querySnapshot.size);
+        querySnapshot.forEach(doc => {
+          const data = doc.data();
+          console.log("Data kegiatan:", data);
+          // Buat card untuk setiap kegiatan
+          const col = document.createElement("div");
+          col.className = "col-md-4 mb-4";
+          col.innerHTML = `
+            <div class="card h-100">
+              <img src="${data.image}" class="card-img-top" alt="${data.judul}" style="height: 200px; object-fit: cover;">
+              <div class="card-body">
+                <h5 class="card-title">${data.judul}</h5>
+                <p class="card-text">${data.deskripsi.substring(0, 100)}...</p>
+              </div>
+              <div class="card-footer">
+                <a href="${data.link || '#'}" class="btn btn-success" target="_blank">Selengkapnya</a>
+              </div>
+            </div>
+          `;
+          container.appendChild(col);
+        });
+        console.log("Tampilan kegiatan diperbarui.");
+      } catch (error) {
+        console.error("Error mengambil data kegiatan:", error);
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      loadKegiatanData();
     });
   </script>
+  <!-- Bootstrap Bundle JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
