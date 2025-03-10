@@ -42,6 +42,22 @@
     #anggotaCards {
       display: none;
     }
+    .footer-custom {
+      background-color: #198754;
+      color: #fff;
+      padding: 20px 0;
+    }
+    .footer-custom a {
+      color: #fff;
+      text-decoration: none;
+    }
+    .footer-custom a:hover {
+      text-decoration: underline;
+    }
+    .social-icons a {
+      font-size: 1.5rem;
+      margin-right: 15px;
+    }
     /* Media Query: untuk layar kecil (handphone) */
     @media (max-width: 767px) {
       #anggotaTable, #memberPhotos {
@@ -155,6 +171,46 @@
       </div>
     </div>
   </div>
+
+  <footer class="footer-custom">
+    <div class="container">
+      <div class="row text-center text-md-start">
+        <div class="col-md-4 mb-3 mb-md-0">
+          <h5>Hubungi Kami</h5>
+          <p>
+            Jl. Contoh Alamat No. 123<br>
+            Kota Contoh, Provinsi<br>
+            Telp: (021) 12345678
+          </p>
+        </div>
+        <div class="col-md-4 mb-3 mb-md-0">
+          <h5>Sosial Media</h5>
+          <div class="social-icons">
+            <a href="https://www.instagram.com/mahapalanarotama" target="_blank" aria-label="Instagram">
+              <i class="bi bi-instagram"></i>
+            </a>
+            <a href="https://www.youtube.com/@mahapalanarotama1216" target="_blank" aria-label="YouTube">
+              <i class="bi bi-youtube"></i>
+            </a>
+            <a href="https://www.tiktok.com/@mahapalanarotama" target="_blank" aria-label="TikTok">
+              <i class="bi bi-music-note-beamed"></i>
+            </a>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <h5>Tentang Kami</h5>
+          <p>
+            Organisasi Pecinta Alam Mahapala Narotama adalah komunitas yang bergerak di bidang eksplorasi alam dan pelestarian lingkungan.
+          </p>
+        </div>
+      </div>
+      <div class="row mt-3">
+        <div class="col text-center">
+          <p class="mb-0">&copy; 2025 Organisasi Pecinta Alam. All rights reserved.</p>
+        </div>
+      </div>
+    </div>
+  </footer>
 
   <!-- Firebase and QRCode Integration -->
   <script type="module">
