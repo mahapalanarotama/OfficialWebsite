@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>ID Card 3D Flip</title>
+  <style>
+    /* Mengatur tampilan halaman */
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      background: #f0f0f0;
+    }
+    /* Container dengan perspektif 3D */
+    .scene {
+      width: 300px;
+      height: 190px;
+      perspective: 1000px;
+    }
+    /* Card yang akan di-flip */
+    .card {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      transform-style: preserve-3d;
+      transition: transform 0.8s;
+      cursor: pointer;
+    }
+    /* State flipped */
+    .card.is-flipped {
+      transform: rotateY(180deg);
+    }
+    /* Sisi depan dan belakang card */
+    .card__face {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      backface-visibility: hidden;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    /* Gambar pada masing-masing sisi */
+    .card__face img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    /* Sisi belakang dirotasi 180 derajat */
+    .card__face--back {
+      transform: rotateY(180deg);
+    }
+  </style>
+</head>
+<body>
+
+<div class="scene">
+  <div class="card" id="card">
+    <div class="card__face card__face--front">
+      <!-- Default foto depan akan diganti jika ada parameter di URL -->
+      <img id="frontImage" src="https://github.com/mahapalanarotama/OfficialWebsite/blob/main/Img/front.png?raw=true" alt="ID Card Depan">
+    </div>
+    <div class="card__face card__face--back">
+      <img src="https://raw.githubusercontent.com/mahapalanarotama/OfficialWebsite/refs/heads/main/Img/back.png" alt="ID Card Belakang">
+    </div>
+  </div>
+</div>
+
+<script>
+  // Event listener untuk membalik card saat diklik
+  const card = document.getElementById('card');
+  card.addEventListener('click', function() {
+    card.classList.toggle('is-flipped');
+  });
+
+  // Fungsi untuk membaca query string dan mengubah foto depan
+  (function() {
+    // Mendapatkan query string, contoh: "?=user1"
+    const query = window.location.search;
+    if(query && query.startsWith('?=')) {
+      // Mengambil nilai setelah "?="
+      const user = query.substring(2);
+      // Menentukan base URL untuk foto depan. Sesuaikan base URL ini jika diperlukan.
+      const baseURL = "https://github.com/mahapalanarotama/OfficialWebsite/blob/main/Img/";
+      // Mengganti foto depan berdasarkan query parameter, misalnya user1.png
+      const newSrc = baseURL + user + ".png?raw=true";
+      document.getElementById('frontImage').src = newSrc;
+    }
+  })();
+</script>
+
+</body>
+</html>
