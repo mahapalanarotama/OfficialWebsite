@@ -124,23 +124,26 @@
         </div>
       </div>
 
-      <!-- Tampilan Tabel Data Anggota (Desktop) -->
-      <table class="table table-striped" id="anggotaTable">
-        <thead>
-          <tr>
-            <th>Nama Lengkap</th>
-            <th>Nama Lapangan</th>
-            <th>Nama Angkatan</th>
-            <th>Tahun Angkatan</th>
-            <th>Nomor Registrasi</th>
-            <th>Keanggotaan</th>
-            <th>QR Code</th>
-          </tr>
-        </thead>
-        <tbody id="anggotaTableBody">
-          <!-- Data akan dimuat dari Firestore, namun default disembunyikan -->
-        </tbody>
-      </table>
+      <!-- Tabel Data Anggota (Desktop) -->
+      <div class="table-responsive">
+        <table class="table table-striped" id="anggotaTable">
+          <thead>
+            <tr>
+              <th>Nama Lengkap</th>
+              <th>Nama Lapangan</th>
+              <th>Nama Angkatan</th>
+              <th>Tahun Angkatan</th>
+              <th>Nomor Registrasi</th>
+              <th>Keanggotaan</th>
+              <th>QR Code</th>
+              <th>3D ID Card</th>
+            </tr>
+          </thead>
+          <tbody id="anggotaTableBody">
+            <!-- Data akan dimuat dari Firestore, default disembunyikan -->
+          </tbody>
+        </table>
+      </div>
 
       <!-- Tampilan Foto Kartu Anggota (Desktop) -->
       <div class="mt-5" id="memberPhotos">
@@ -179,7 +182,7 @@
         <div class="col-md-4 mb-3 mb-md-0">
           <h5>Hubungi Kami</h5>
           <p>
-            Jl. Arief Rachman Hakim No. 51, klampis ngasem, sukolilo<br>
+            Jl. Arief Rachman Hakim No. 51, Klampis Ngasem, Sukolilo<br>
             Kota Surabaya, Jawa Timur<br>
             Telp: (081) 34133 2882
           </p>
@@ -220,7 +223,7 @@
     import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-analytics.js";
     import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
 
-    // Firebase configuration (pastikan konfigurasi sesuai project kamu)
+    // Firebase configuration (sesuaikan dengan proyek Anda)
     const firebaseConfig = {
       apiKey: "AIzaSyBe-XLmVRiMs844VxR1_awMzGEGARb6Xmk",
       authDomain: "website-mpn-65e8d.firebaseapp.com",
@@ -231,10 +234,11 @@
       measurementId: "G-KSVPVC1Z9D"
     };
 
-    // Initialize Firebase
+    console.log("Inisialisasi Firebase...");
     const app = initializeApp(firebaseConfig);
     const analytics = getAnalytics(app);
     const db = getFirestore(app);
+    console.log("Firebase dan Firestore diinisialisasi.");
 
     // Fungsi untuk mengambil data anggota dari Firestore dan menyusun tabel
     async function loadAnggotaData() {
@@ -255,8 +259,8 @@
           row.setAttribute("data-tahun", data.tahun.toString());
           row.setAttribute("data-nomorregistrasi", data.nomorregistrasi.toString());
           row.setAttribute("data-keanggotaan", data.keanggotaan.toString());
-          // Pastikan field foto tersimpan dengan benar
           row.setAttribute("data-foto", data.foto ? data.foto.toString() : "");
+          // Tambahkan kolom baru untuk "3D ID Card"
           row.innerHTML = `
             <td>${data.namalengkap}</td>
             <td>${data.namalapangan}</td>
@@ -266,6 +270,9 @@
             <td>${data.keanggotaan}</td>
             <td>
               <canvas id="qr-${data.nomorregistrasi}" class="qrcode"></canvas>
+            </td>
+            <td>
+              ${data.url ? `<a href="${data.url}" class="btn btn-primary btn-sm" target="_blank">Lihat</a>` : ""}
             </td>
           `;
           // Sembunyikan baris secara default
@@ -295,7 +302,6 @@
           }, function (error) {
             if (error) console.error(error);
           });
-          // Tambahkan event listener agar ketika QR code diklik, modal tampil
           canvasElement.addEventListener("click", function() {
             const modalImage = document.getElementById("modalImage");
             modalImage.src = foto;
@@ -317,7 +323,7 @@
         if (row.style.display !== "none") {
           const foto = row.getAttribute("data-foto");
           const nama = row.getAttribute("data-namalengkap");
-          if(foto && foto.trim() !== ""){
+          if (foto && foto.trim() !== "") {
             const img = document.createElement("img");
             img.src = foto;
             img.alt = "Kartu Anggota " + nama;
@@ -347,8 +353,7 @@
           const nomorregistrasi = row.getAttribute("data-nomorregistrasi");
           const keanggotaan = row.getAttribute("data-keanggotaan");
           const foto = row.getAttribute("data-foto");
-          const link = row.querySelector("a") ? row.querySelector("a").href : "#";
-
+          const url = row.getAttribute("data-url") || "#";
           const card = document.createElement("div");
           card.className = "card mb-3";
           card.innerHTML = `
@@ -364,7 +369,7 @@
               </p>
             </div>
             <div class="card-footer">
-              <canvas id="qr-mobile-${nomorregistrasi}" class="qrcode"></canvas>
+              ${url !== "#" ? `<a href="${url}" class="btn btn-primary btn-sm" target="_blank">Lihat 3D ID Card</a>` : ""}
             </div>
           `;
           cardContainer.appendChild(card);
@@ -440,7 +445,7 @@
       document.getElementById("searchBtn").addEventListener("click", filterTable);
       document.getElementById("searchInput").addEventListener("keyup", filterTable);
 
-      // Tambahkan event listener untuk tombol Bagikan pada modal
+      // Event listener untuk tombol Bagikan pada modal
       document.getElementById("shareButton").addEventListener("click", function() {
         const modalImage = document.getElementById("modalImage");
         const imageUrl = modalImage.src;
