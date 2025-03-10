@@ -137,12 +137,24 @@
     </div>
   </section>
 
-  <!-- Footer -->
-  <footer class="bg-success text-white py-4">
-    <div class="container text-center">
-      <p>&copy; 2025 Organisasi Pecinta Alam. All rights reserved.</p>
+  <!-- Modal Fullscreen untuk Tampilan Gambar -->
+  <div class="modal fade" id="photoModal" tabindex="-1" aria-labelledby="photoModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-fullscreen">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="photoModalLabel">Kartu Anggota</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body text-center">
+          <img id="modalImage" src="" alt="Kartu Anggota" class="img-fluid">
+        </div>
+        <div class="modal-footer">
+          <a id="downloadButton" href="#" download class="btn btn-primary">Download</a>
+          <button id="shareButton" type="button" class="btn btn-secondary">Bagikan</button>
+        </div>
+      </div>
     </div>
-  </footer>
+  </div>
 
   <!-- Firebase and QRCode Integration -->
   <script type="module">
@@ -186,7 +198,8 @@
           row.setAttribute("data-tahun", data.tahun.toString());
           row.setAttribute("data-nomorregistrasi", data.nomorregistrasi.toString());
           row.setAttribute("data-keanggotaan", data.keanggotaan.toString());
-          row.setAttribute("data-foto", data.foto); // URL foto
+          // Pastikan field foto tersimpan dengan benar
+          row.setAttribute("data-foto", data.foto ? data.foto.toString() : "");
           row.innerHTML = `
             <td>${data.namalengkap}</td>
             <td>${data.namalapangan}</td>
@@ -195,9 +208,7 @@
             <td>${data.nomorregistrasi}</td>
             <td>${data.keanggotaan}</td>
             <td>
-              <a href="${data.link}" target="_blank">
-                <canvas id="qr-${data.nomorregistrasi}" class="qrcode"></canvas>
-              </a>
+              <canvas id="qr-${data.nomorregistrasi}" class="qrcode"></canvas>
             </td>
           `;
           // Sembunyikan baris secara default
@@ -213,18 +224,28 @@
     }
 
     // Fungsi untuk menghasilkan QR Code untuk setiap baris (desktop)
+    // QR code dihasilkan dari URL foto (data-foto)
     function generateQRCodes() {
       const rows = document.querySelectorAll("#anggotaTable tbody tr");
       rows.forEach(row => {
+        const foto = row.getAttribute("data-foto");
         const nomor = row.getAttribute("data-nomorregistrasi");
         const canvasElement = document.getElementById("qr-" + nomor);
-        if (canvasElement) {
-          // Hasilkan QR Code berdasarkan URL link anggota
-          QRCode.toCanvas(canvasElement, row.querySelector("a").href, {
+        if (canvasElement && foto && foto.trim() !== "") {
+          QRCode.toCanvas(canvasElement, foto, {
             width: 80,
             margin: 1
           }, function (error) {
             if (error) console.error(error);
+          });
+          // Tambahkan event listener agar ketika QR code diklik, modal tampil
+          canvasElement.addEventListener("click", function() {
+            const modalImage = document.getElementById("modalImage");
+            modalImage.src = foto;
+            const downloadButton = document.getElementById("downloadButton");
+            downloadButton.href = foto;
+            const photoModal = new bootstrap.Modal(document.getElementById("photoModal"));
+            photoModal.show();
           });
         }
       });
@@ -236,7 +257,6 @@
       const photoContainer = document.getElementById("memberPhotos");
       photoContainer.innerHTML = "";
       rows.forEach(row => {
-        // Tampilkan foto hanya jika baris tampil (hasil pencarian)
         if (row.style.display !== "none") {
           const foto = row.getAttribute("data-foto");
           const nama = row.getAttribute("data-namalengkap");
@@ -270,9 +290,8 @@
           const nomorregistrasi = row.getAttribute("data-nomorregistrasi");
           const keanggotaan = row.getAttribute("data-keanggotaan");
           const foto = row.getAttribute("data-foto");
-          const link = row.querySelector("a").href;
+          const link = row.querySelector("a") ? row.querySelector("a").href : "#";
 
-          // Buat card dengan Bootstrap
           const card = document.createElement("div");
           card.className = "card mb-3";
           card.innerHTML = `
@@ -288,9 +307,7 @@
               </p>
             </div>
             <div class="card-footer">
-              <a href="${link}" target="_blank">
-                <canvas id="qr-mobile-${nomorregistrasi}" class="qrcode"></canvas>
-              </a>
+              <canvas id="qr-mobile-${nomorregistrasi}" class="qrcode"></canvas>
             </div>
           `;
           cardContainer.appendChild(card);
@@ -306,12 +323,21 @@
         if (row.style.display !== "none") {
           const nomor = row.getAttribute("data-nomorregistrasi");
           const canvasElement = document.getElementById("qr-mobile-" + nomor);
-          if (canvasElement) {
-            QRCode.toCanvas(canvasElement, row.querySelector("a").href, {
+          const foto = row.getAttribute("data-foto");
+          if (canvasElement && foto && foto.trim() !== "") {
+            QRCode.toCanvas(canvasElement, foto, {
               width: 80,
               margin: 1
             }, function (error) {
               if (error) console.error(error);
+            });
+            canvasElement.addEventListener("click", function() {
+              const modalImage = document.getElementById("modalImage");
+              modalImage.src = foto;
+              const downloadButton = document.getElementById("downloadButton");
+              downloadButton.href = foto;
+              const photoModal = new bootstrap.Modal(document.getElementById("photoModal"));
+              photoModal.show();
             });
           }
         }
@@ -324,7 +350,6 @@
       const query = document.getElementById("searchInput").value.toLowerCase().trim();
       const rows = document.querySelectorAll("#anggotaTable tbody tr");
       
-      // Jika query kosong, sembunyikan semua baris
       if (query === "") {
         rows.forEach(row => row.style.display = "none");
       } else {
@@ -340,8 +365,8 @@
     // Fungsi untuk menangkap parameter URL (jika ingin mengisi pencarian otomatis)
     function getQueryParams() {
       const params = new URLSearchParams(window.location.search);
-      const type = params.get("type");  // Jenis pencarian
-      const input = params.get("input"); // Nilai yang dicari
+      const type = params.get("type");  
+      const input = params.get("input"); 
       
       if (type && input) {
         document.getElementById("searchType").value = type;
@@ -350,19 +375,36 @@
       }
     }
 
+    // Event listener
     document.addEventListener("DOMContentLoaded", () => {
       loadAnggotaData().then(() => {
-        getQueryParams(); // Jika ada parameter URL, jalankan pencarian otomatis
+        getQueryParams();
       });
-
       document.getElementById("searchBtn").addEventListener("click", filterTable);
       document.getElementById("searchInput").addEventListener("keyup", filterTable);
+
+      // Tambahkan event listener untuk tombol Bagikan pada modal
+      document.getElementById("shareButton").addEventListener("click", function() {
+        const modalImage = document.getElementById("modalImage");
+        const imageUrl = modalImage.src;
+        if (navigator.share) {
+          navigator.share({
+            title: "Kartu Anggota Mahapala Narotama",
+            text: "Lihat kartu anggota ini!",
+            url: imageUrl
+          })
+          .then(() => console.log("Berhasil membagikan"))
+          .catch(error => console.error("Gagal membagikan:", error));
+        } else {
+          alert("Fitur share tidak didukung di browser ini.");
+        }
+      });
     });
     
   </script>
-  <!-- Pastikan QRCode.js tersedia (CDN non-modular) -->
+  <!-- QRCode.js -->
   <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
-  <!-- Bootstrap Bundle JS (non-module) -->
+  <!-- Bootstrap Bundle JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
