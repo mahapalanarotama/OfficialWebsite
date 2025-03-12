@@ -28,7 +28,7 @@
     .qrcode {
       cursor: pointer;
     }
-    /* Styling foto kartu anggota (untuk tampilan desktop) */
+    /* Styling foto kartu anggota (desktop) */
     .member-photo {
       max-width: 500px;
       margin: 10px;
@@ -39,7 +39,7 @@
     #anggotaTable, #memberPhotos {
       display: block;
     }
-    /* Tampilan kartu untuk mobile (seluler) */
+    /* Tampilan kartu untuk mobile */
     #anggotaCards {
       display: none;
     }
@@ -81,18 +81,10 @@
       </button>
       <div class="collapse navbar-collapse" id="navbarContent">
          <ul class="navbar-nav ms-auto">
-            <li class="nav-item">
-              <a class="nav-link" href="index.html">Beranda</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="kegiatan.html">Kegiatan</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="pembelajaran.html">Pembelajaran</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link active" href="kartuanggota.html">Kartu Anggota</a>
-            </li>
+            <li class="nav-item"><a class="nav-link" href="index.html">Beranda</a></li>
+            <li class="nav-item"><a class="nav-link" href="kegiatan.html">Kegiatan</a></li>
+            <li class="nav-item"><a class="nav-link" href="pembelajaran.html">Pembelajaran</a></li>
+            <li class="nav-item"><a class="nav-link active" href="kartuanggota.html">Kartu Anggota</a></li>
          </ul>
       </div>
     </div>
@@ -218,12 +210,10 @@
 
   <!-- Firebase and QRCode Integration -->
   <script type="module">
-    // Import Firebase modules
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
     import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-analytics.js";
     import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
 
-    // Firebase configuration (sesuaikan dengan proyek Anda)
     const firebaseConfig = {
       apiKey: "AIzaSyBe-XLmVRiMs844VxR1_awMzGEGARb6Xmk",
       authDomain: "website-mpn-65e8d.firebaseapp.com",
@@ -240,10 +230,13 @@
     const db = getFirestore(app);
     console.log("Firebase dan Firestore diinisialisasi.");
 
-    // Fungsi untuk mengambil data anggota dari Firestore dan menyusun tabel
+    // Fungsi untuk mengambil data anggota dari Firestore dan menyusun tabel serta card mobile
     async function loadAnggotaData() {
       const anggotaTableBody = document.getElementById("anggotaTableBody");
-      anggotaTableBody.innerHTML = ""; // Bersihkan tabel
+      anggotaTableBody.innerHTML = "";
+
+      // Jika ada slider (misalnya, elemen dengan id "sliderInner"), pastikan mengosongkannya juga.
+      // (Kode slider tidak ditampilkan di sini, tapi Anda dapat menambahkannya bila perlu.)
 
       try {
         const querySnapshot = await getDocs(collection(db, "anggota"));
@@ -260,7 +253,7 @@
           row.setAttribute("data-nomorregistrasi", data.nomorregistrasi.toString());
           row.setAttribute("data-keanggotaan", data.keanggotaan.toString());
           row.setAttribute("data-foto", data.foto ? data.foto.toString() : "");
-          // Tambahkan kolom baru untuk "3D ID Card"
+          row.setAttribute("data-url", data.url ? data.url.toString() : "");
           row.innerHTML = `
             <td>${data.namalengkap}</td>
             <td>${data.namalapangan}</td>
@@ -275,7 +268,6 @@
               ${data.url ? `<a href="${data.url}" class="btn btn-primary btn-sm" target="_blank">Lihat</a>` : ""}
             </td>
           `;
-          // Sembunyikan baris secara default
           row.style.display = "none";
           anggotaTableBody.appendChild(row);
         });
@@ -287,8 +279,7 @@
       }
     }
 
-    // Fungsi untuk menghasilkan QR Code untuk setiap baris (desktop)
-    // QR code dihasilkan dari URL foto (data-foto)
+    // Fungsi untuk menghasilkan QR Code untuk desktop
     function generateQRCodes() {
       const rows = document.querySelectorAll("#anggotaTable tbody tr");
       rows.forEach(row => {
@@ -353,7 +344,8 @@
           const nomorregistrasi = row.getAttribute("data-nomorregistrasi");
           const keanggotaan = row.getAttribute("data-keanggotaan");
           const foto = row.getAttribute("data-foto");
-          const url = row.getAttribute("data-url") || "#";
+          const url = row.getAttribute("data-url") || "";
+          // Buat card dengan Bootstrap, sertakan QR Code dan tombol "Lihat" jika URL ada
           const card = document.createElement("div");
           card.className = "card mb-3";
           card.innerHTML = `
@@ -368,8 +360,13 @@
                 <strong>Keanggotaan:</strong> ${keanggotaan}
               </p>
             </div>
-            <div class="card-footer">
-              ${url !== "#" ? `<a href="${url}" class="btn btn-primary btn-sm" target="_blank">Lihat 3D ID Card</a>` : ""}
+            <div class="card-footer d-flex justify-content-between align-items-center">
+              <div>
+                <canvas id="qr-mobile-${nomorregistrasi}" class="qrcode"></canvas>
+              </div>
+              <div>
+                ${url !== "" ? `<a href="${url}" class="btn btn-primary btn-sm" target="_blank">Lihat 3D ID Card</a>` : ""}
+              </div>
             </div>
           `;
           cardContainer.appendChild(card);
@@ -384,6 +381,7 @@
       rows.forEach(row => {
         if (row.style.display !== "none") {
           const nomor = row.getAttribute("data-nomorregistrasi");
+          // Cari canvas QR code di card mobile; kita gunakan id dengan prefix "qr-mobile-"
           const canvasElement = document.getElementById("qr-mobile-" + nomor);
           const foto = row.getAttribute("data-foto");
           if (canvasElement && foto && foto.trim() !== "") {
@@ -424,7 +422,7 @@
       updateAnggotaCards();
     }
 
-    // Fungsi untuk menangkap parameter URL (jika ingin mengisi pencarian otomatis)
+    // Fungsi untuk menangkap parameter URL (untuk pencarian otomatis jika diperlukan)
     function getQueryParams() {
       const params = new URLSearchParams(window.location.search);
       const type = params.get("type");  
